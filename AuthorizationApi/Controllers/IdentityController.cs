@@ -27,7 +27,7 @@ namespace AuthorizationApi.Controllers
         [HttpPost]
         public bool VerifyToken()
         {
-            return tokenService.VerifyToken();
+            return tokenService.VerifyAccessToken();
         }
     }
 }

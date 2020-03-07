@@ -37,7 +37,7 @@ namespace AuthorizationApi.Services
 
                 if(user != null)
                 {
-                    return tokenService.CreateToken(user);
+                    return tokenService.CreateAccessToken(user);
                 }
 
                 throw new Exception("Unauthorized");
@@ -51,20 +51,26 @@ namespace AuthorizationApi.Services
             switch(payload.GrantType.ToLower())
             {
                 case "authenticate_site":
-                    break;
+                    return true;
 
                 case "password":
-                    if(payload.Username == null || payload.Password == null)
+                    if(payload.Username != null && payload.Password != null)
                     {
-                        return false;
+                        return true;
                     }
+
                     break;
 
                 case "refresh_token":
+                    if(payload.RefreshToken != null)
+                    {
+                        return true;
+                    }
+
                     break;
             }
 
-            return true;
+            return false;
         }
 
         private bool IsAuthenticClient(string clientId, string clientSecret)

@@ -52,7 +52,7 @@ namespace AuthorizationApi.Services
             /QIDAQAB
             -----END PUBLIC KEY-----";
 
-        public string CreateToken(User user)
+        public string CreateAccessToken(User user)
         {
 
             var privateKeyBytes = Convert.FromBase64String(PrivateKey.Replace("-----BEGIN PRIVATE KEY-----", "").Replace("-----END PRIVATE KEY-----", ""));
@@ -70,13 +70,18 @@ namespace AuthorizationApi.Services
                 notBefore: now,
                 expires: now.AddMinutes(5),
                 signingCredentials: new SigningCredentials(key, SecurityAlgorithms.RsaSha256),
-                claims: GetClaimsIdentity(user)
+                claims: GetClaims(user)
             );
 
             return handler.WriteToken(jwtSecurityToken);
         }
 
-        private dynamic GetClaimsIdentity(User user)
+        public string CreateRefreshToken()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        private dynamic GetClaims(User user)
         {
             List<Claim> claimList = new List<Claim>();
             claimList.Add(new Claim("email", user.Username));
@@ -88,7 +93,7 @@ namespace AuthorizationApi.Services
             return claimList;
         }
 
-        public bool VerifyToken()
+        public bool VerifyAccessToken()
         {
             string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJhc2VsQGdtYWlsLmNvbSIsInJvbGUiOlsiYWRtaW4iLCJjdXN0b21lciJdLCJuYmYiOjE1ODM1NjI2OTMsImV4cCI6MTU4MzU2Mjk5MywiaXNzIjoibWUiLCJhdWQiOiJ5b3UifQ.d_gEpWGAWrzc75tO-AxLL8rKLQa_s7oyxuMLHIGyNbcIxZBAzLTj8Fe5pHxPDakVFyaKLIDzC1f5cvPTovweb1XjcHksh0SxROFBTUXLRVOI2kHPIE837OLVP2xDBWU5UP1dyMU8iOc4G1rsrrgf2ZcwUCry3eJjaHd-celMK9pEmqiIG8riaWn-7yUliWmfqac6vjY4Cpj6U606ESMzWtCTtCZ4Zczo_zGMgIvvMiynk_Hzjwkx1RSrYvvJ3N0YLcl6YTNIFDN33deKzy-7jR-GmGubYP1b85QeZ3RMh2-O7_uu1eRUywot0CRPaYyh5PIvQ_XSfUbJKtMx_JMbDA";
             var handler = new JwtSecurityTokenHandler();
@@ -118,10 +123,5 @@ namespace AuthorizationApi.Services
 
             return true;
         }
-    }
-
-    public class TokenDescriptor: SecurityTokenDescriptor
-    {
-        public string Email { get; set; }
     }
 }
