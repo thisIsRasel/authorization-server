@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using AuthorizationApi.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthorizationApi.Services
 {
+
+    
     public class TokenService
     {
 
@@ -47,7 +52,7 @@ namespace AuthorizationApi.Services
             /QIDAQAB
             -----END PUBLIC KEY-----";
 
-        public string CreateToken()
+        public string CreateToken(User user)
         {
 
             var privateKeyBytes = Convert.FromBase64String(PrivateKey.Replace("-----BEGIN PRIVATE KEY-----", "").Replace("-----END PRIVATE KEY-----", ""));
@@ -59,22 +64,33 @@ namespace AuthorizationApi.Services
             var handler = new JwtSecurityTokenHandler();
             var now = DateTime.UtcNow;
 
-            var descriptor = new SecurityTokenDescriptor
-            {
-                Issuer = "me",
-                Audience = "you",
-                IssuedAt = now,
-                NotBefore = now,
-                Expires = now.AddMinutes(5),
-                SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha256)
-            };
+            JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(
+                issuer: "me",
+                audience: "you",
+                notBefore: now,
+                expires: now.AddMinutes(5),
+                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.RsaSha256),
+                claims: GetClaimsIdentity(user)
+            );
 
-            return handler.CreateEncodedJwt(descriptor);
+            return handler.WriteToken(jwtSecurityToken);
+        }
+
+        private dynamic GetClaimsIdentity(User user)
+        {
+            List<Claim> claimList = new List<Claim>();
+            claimList.Add(new Claim("email", user.Username));
+            foreach (string role in user.Roles)
+            {
+                claimList.Add(new Claim("role", role));
+            }
+
+            return claimList;
         }
 
         public bool VerifyToken()
         {
-            string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1ODM1MTUyMTUsImV4cCI6MTU4MzUxNTUxNSwiaWF0IjoxNTgzNTE1MjE1LCJpc3MiOiJtZSIsImF1ZCI6InlvdSJ9.gE568ff7-yuWNeIowwiCmk56I3Qh8RYBIoqx9VU5ckf3mJWPD7EfPwQZfBQQ9ckB3pirzrkK_mJtXTrm4Njz7HNoq12NU7PkGKMf-sLAGhbPMzHVPv0peGwHlF7NiDonuTzT2O_IdQ-Rf45bLyfAl1Z6MwoIIXpDB2DhSLD3kQ3fT0UfofEyhaMrJitCNpjV9V8NFeu6SgkINw2Ewdjfba21wKyF_HwIiNyC6P8ZQQTDhkebMRMcZ1ua8DsyuPWZpNxuw6UoOFL-AUIRc8_jaAr4Mkvr42Xv85j9peff-c70Jhv-fCiLMMraHrp_f0Fn-CPncZ5A0sWiz1Nt2a3T8w";
+            string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJhc2VsQGdtYWlsLmNvbSIsInJvbGUiOlsiYWRtaW4iLCJjdXN0b21lciJdLCJuYmYiOjE1ODM1NjI2OTMsImV4cCI6MTU4MzU2Mjk5MywiaXNzIjoibWUiLCJhdWQiOiJ5b3UifQ.d_gEpWGAWrzc75tO-AxLL8rKLQa_s7oyxuMLHIGyNbcIxZBAzLTj8Fe5pHxPDakVFyaKLIDzC1f5cvPTovweb1XjcHksh0SxROFBTUXLRVOI2kHPIE837OLVP2xDBWU5UP1dyMU8iOc4G1rsrrgf2ZcwUCry3eJjaHd-celMK9pEmqiIG8riaWn-7yUliWmfqac6vjY4Cpj6U606ESMzWtCTtCZ4Zczo_zGMgIvvMiynk_Hzjwkx1RSrYvvJ3N0YLcl6YTNIFDN33deKzy-7jR-GmGubYP1b85QeZ3RMh2-O7_uu1eRUywot0CRPaYyh5PIvQ_XSfUbJKtMx_JMbDA";
             var handler = new JwtSecurityTokenHandler();
 
             var publicKeyBytes = Convert.FromBase64String(PublicKey.Replace("-----BEGIN PUBLIC KEY-----", "").Replace("-----END PUBLIC KEY-----", ""));
@@ -102,5 +118,10 @@ namespace AuthorizationApi.Services
 
             return true;
         }
+    }
+
+    public class TokenDescriptor: SecurityTokenDescriptor
+    {
+        public string Email { get; set; }
     }
 }

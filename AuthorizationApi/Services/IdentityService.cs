@@ -1,4 +1,6 @@
 ﻿using AuthorizationApi.Models;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AuthorizationApi.Services
@@ -18,45 +20,88 @@ namespace AuthorizationApi.Services
         {
             if(IsValidRequestForGrantType(payload))
             {
-                GetUser(payload.Username, payload.Password);
+                User user = null;
+                switch(payload.GrantType.ToLower())
+                {
+                    case "authenticate_site":
+                        user = GetDefaultAnonymousUser();
+                        break;
+
+                    case "password":
+                        user = GetUser(payload.Username, payload.Password);
+                        break;
+
+                    case "refresh_token":
+                        break;
+                }
+
+                if(user != null)
+                {
+                    return tokenService.CreateToken(user);
+                }
+
+                throw new Exception("Unauthorized");
             }
 
-            return "INVALID";
+            throw new Exception("Invalid request");
         }
 
         private bool IsValidRequestForGrantType(TokenPayload payload)
         {
             switch(payload.GrantType.ToLower())
             {
+                case "authenticate_site":
+                    break;
+
                 case "password":
-                    if(payload.Username != null && payload.Password != null)
+                    if(payload.Username == null || payload.Password == null)
                     {
-                        return true;
+                        return false;
                     }
                     break;
 
-                default:
+                case "refresh_token":
                     break;
             }
 
-            return false;
+            return true;
         }
 
-        private bool IsAuthenticClient(TokenPayload payload)
+        private bool IsAuthenticClient(string clientId, string clientSecret)
         {
-            var clients = authorizationContext.ClientDetails.Where<ClientDetail>(client => client.ClientId == payload.ClientId && client.ClientSecret == payload.ClientSecret).ToList();
-            return clients.Count > 0 ? true : false;
+            var client = authorizationContext.ClientDetails.Where<ClientDetail>(client => client.ClientId == clientId && client.ClientSecret == clientSecret).FirstOrDefault();
+            return client != null ? true : false;
         }
 
-        private void GetUser(string userName, string password)
+        private User GetDefaultAnonymousUser()
         {
-            var user = authorizationContext.Users.Where<User>(user => user.Username == userName && user.Password == password).First();
+            return new User()
+            {
+                Username = "default@gmail.com",
+                Roles = new string[] { "anonymous" }
+            };
         }
 
-        private void GetRolesByUserId(long userId)
+        private User GetUser(string userName, string password)
         {
-            var roles = authorizationContext.UserRoleMaps.Where<UserRoleMap>(userRole => userRole.UserId == userId).ToList();
-            
+            var user = authorizationContext.Users.Where<User>(u => u.Username == userName && u.Password == password).FirstOrDefault();
+            if(user != null)
+            {
+                user.Roles = GetRolesByUserId(user.Id);
+            }
+            return user;
+        }
+
+        private string[] GetRolesByUserId(long userId)
+        {
+            List<string> roles = new List<string>();
+            var results = authorizationContext.UserRoleMaps.Where<UserRoleMap>(userRole => userRole.UserId == userId).ToList();
+            results.ForEach(item =>
+            {
+                roles.Add(item.Role);
+            });
+
+            return roles.ToArray();
         }
     }
 }

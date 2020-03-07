@@ -9,27 +9,25 @@ namespace AuthorizationApi.Controllers
     public class IdentityController : ControllerBase
     {
 
-        private TokenService _tokenService;
-        private IdentityService _identityService;
+        private readonly TokenService tokenService;
+        private readonly IdentityService identityService;
 
         public IdentityController(TokenService tokenService, IdentityService identityService)
         {
-            _tokenService = tokenService;
-            _identityService = identityService;
+            this.tokenService = tokenService;
+            this.identityService = identityService;
         }
 
         [HttpPost]
         public dynamic Token([FromBody] TokenPayload payload)
         {
-            _identityService.GenerateToken(payload);
-            return payload;
-            //return _tokenService.CreateToken();
+            return identityService.GenerateToken(payload);
         }
 
         [HttpPost]
         public bool VerifyToken()
         {
-            return _tokenService.VerifyToken();
+            return tokenService.VerifyToken();
         }
     }
 }
