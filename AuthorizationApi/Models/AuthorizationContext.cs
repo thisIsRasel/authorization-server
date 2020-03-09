@@ -15,5 +15,7 @@ namespace AuthorizationApi.Models
         public DbSet<ClientDetail> ClientDetails { get; set; }
         
         public DbSet<UserRoleMap> UserRoleMaps { get; set; }
+
+        public DbSet<RefreshToken> RefreshTokens { get; set; } 
     }
 }

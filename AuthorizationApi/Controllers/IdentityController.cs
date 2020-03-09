@@ -1,6 +1,7 @@
 ﻿using AuthorizationApi.Models;
 using AuthorizationApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace AuthorizationApi.Controllers
 {
@@ -21,7 +22,8 @@ namespace AuthorizationApi.Controllers
         [HttpPost]
         public dynamic Token([FromBody] TokenPayload payload)
         {
-            return identityService.GenerateToken(payload);
+            var token = identityService.GenerateToken(payload);
+            return token;
         }
 
         [HttpPost]

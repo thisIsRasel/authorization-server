@@ -1,4 +1,5 @@
 ﻿using AuthorizationApi.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,58 +17,123 @@ namespace AuthorizationApi.Services
             this.tokenService = tokenService;
         }
 
-        public string GenerateToken(TokenPayload payload)
+        public dynamic GenerateToken(TokenPayload payload)
         {
-            if(IsValidRequestForGrantType(payload))
+            if (!IsInputValidForDifferentGrantType(payload))
             {
-                User user = null;
-                switch(payload.GrantType.ToLower())
-                {
-                    case "authenticate_site":
-                        user = GetDefaultAnonymousUser();
-                        break;
-
-                    case "password":
-                        user = GetUser(payload.Username, payload.Password);
-                        break;
-
-                    case "refresh_token":
-                        break;
-                }
-
-                if(user != null)
-                {
-                    return tokenService.CreateAccessToken(user);
-                }
-
-                throw new Exception("Unauthorized");
+                throw new Exception("Invalid Request");
             }
 
-            throw new Exception("Invalid request");
+            string grantType = payload.GrantType != null ? payload.GrantType.ToLower() : null;
+
+            if (grantType == "authenticate_site")
+            { 
+                return GetTokenForAuthenticateSiteGrantType();
+            }
+
+            if(grantType == "password")
+            {
+                return GetTokenForPasswordGrantType(payload);
+            }
+
+            if(grantType == "refresh_token")
+            {
+                return GetTokenForRefreshTokenGrantType(payload);
+            }
+
+            throw new Exception("Unauthorized");
         }
 
-        private bool IsValidRequestForGrantType(TokenPayload payload)
+        private JObject GetTokenForAuthenticateSiteGrantType()
         {
-            switch(payload.GrantType.ToLower())
+            var obj = new JObject();
+            obj.Add("token_type", "Bearer");
+            obj.Add("expires_in", 5 * 60);
+
+            User user = GetDefaultAnonymousUser();
+            obj.Add("access_token", tokenService.CreateAccessToken(user));
+            obj.Add("refresh_token", CreateRefreshToken(user));
+            return obj;
+        }
+
+        private JObject GetTokenForPasswordGrantType(TokenPayload payload)
+        {
+            var obj = new JObject();
+            obj.Add("token_type", "Bearer");
+            obj.Add("expires_in", 5 * 60);
+
+            User user = GetUserByUsernameAndPassword(payload.Username, payload.Password);
+            obj.Add("access_token", tokenService.CreateAccessToken(user));
+            obj.Add("refresh_token", CreateRefreshToken(user));
+            return obj;
+        }
+
+        private JObject GetTokenForRefreshTokenGrantType(TokenPayload payload)
+        {
+            var obj = new JObject();
+            obj.Add("token_type", "Bearer");
+            obj.Add("expires_in", 5 * 60);
+
+            RefreshToken refreshToken = FindRefreshToken(payload.RefreshToken);
+            if(refreshToken == null)
             {
-                case "authenticate_site":
-                    return true;
+                throw new Exception("Invalid refresh token");
+            }
 
-                case "password":
-                    if(payload.Username != null && payload.Password != null)
-                    {
-                        return true;
-                    }
+            var currentTime = DateTime.Now;
+            var createdAt = refreshToken.CreatedAt.AddMinutes(10);
 
-                    break;
+            if(refreshToken.CreatedAt.AddMinutes(10) < DateTime.Now)
+            {
+                throw new Exception("Refresh token expired");
+            }
 
-                case "refresh_token":
-                    if(payload.RefreshToken != null)
-                    {
-                        return true;
-                    }
+            User user = GetUserByUsername(refreshToken.UserId);
+            if(user == null)
+            {
+                user = GetDefaultAnonymousUser();
+            }
 
-                    break;
+            obj.Add("access_token", tokenService.CreateAccessToken(user));
+
+            return obj;
+        }
+
+        private string CreateRefreshToken(User user)
+        {
+            string refreshToken = tokenService.CreateRefreshToken();
+            authorizationContext.RefreshTokens.Add(new RefreshToken()
+            {
+                Token = refreshToken,
+                CreatedAt = DateTime.Now,
+                UserId = user.Username
+            });
+            authorizationContext.SaveChanges();
+
+            return refreshToken;
+        }
+
+        private RefreshToken FindRefreshToken(string refreshToken)
+        {
+            RefreshToken token = authorizationContext.RefreshTokens.Where<RefreshToken>(r => r.Token == refreshToken).FirstOrDefault();
+            return token;
+        }
+
+        private bool IsInputValidForDifferentGrantType(TokenPayload payload)
+        {
+            string grantType = payload.GrantType != null ? payload.GrantType.ToLower() : null;
+
+            if(grantType == "authenticate_site")
+            {
+                return true;
+            }
+            else if(grantType == "password" && payload.Username != null && payload.Password != null)
+            {
+                return true;
+            }
+            else if(grantType == "refresh_token" && payload.RefreshToken != null)
+            {
+                return true;
             }
 
             return false;
@@ -88,10 +154,20 @@ namespace AuthorizationApi.Services
             };
         }
 
-        private User GetUser(string userName, string password)
+        private User GetUserByUsernameAndPassword(string userName, string password)
         {
             var user = authorizationContext.Users.Where<User>(u => u.Username == userName && u.Password == password).FirstOrDefault();
             if(user != null)
+            {
+                user.Roles = GetRolesByUserId(user.Id);
+            }
+            return user;
+        }
+
+        private User GetUserByUsername(string userName)
+        {
+            var user = authorizationContext.Users.Where<User>(u => u.Username == userName).FirstOrDefault();
+            if (user != null)
             {
                 user.Roles = GetRolesByUserId(user.Id);
             }
