@@ -1,11 +1,12 @@
 ﻿
+using AuthorizationApi.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuthorizationApi.Models
+namespace AuthorizationApi
 {
-    public class AuthorizationContext: DbContext
+    public class AuthorizationDbContext: DbContext
     {
-        public AuthorizationContext(DbContextOptions<AuthorizationContext> options): base(options)
+        public AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> options): base(options)
         {
 
         }

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthorizationApi.Models
+namespace AuthorizationApi.Entities
 {
     [Table("client_details")]
     public class ClientDetail

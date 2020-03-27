@@ -13,7 +13,7 @@ namespace AuthorizationApi.Services
     public class TokenService
     {
 
-        private string PrivateKey = @"-----BEGIN PRIVATE KEY-----
+        private readonly string PrivateKey = @"-----BEGIN PRIVATE KEY-----
             MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCF31d4r6s4bwI/
             Pab/xnW262TWJ44DpS5fkiZdK9+Zs22XMM8m75pNXCF9BDD+ktu/K8aNmPvqIV3h
             u1npS+fPrDtC9AcA7d6IIgWBqVnZV1/OqjgsSQ5w7CyjCHq5iEJYjqShwHTmv/Un
@@ -42,7 +42,7 @@ namespace AuthorizationApi.Services
             g71HzyoHH2IA/bBYQxWXBtM5
             -----END PRIVATE KEY-----";
 
-        private string PublicKey = @"-----BEGIN PUBLIC KEY-----
+        private readonly string PublicKey = @"-----BEGIN PUBLIC KEY-----
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhd9XeK+rOG8CPz2m/8Z1
             tutk1ieOA6UuX5ImXSvfmbNtlzDPJu+aTVwhfQQw/pLbvyvGjZj76iFd4btZ6Uvn
             z6w7QvQHAO3eiCIFgalZ2Vdfzqo4LEkOcOwsowh6uYhCWI6kocB05r/1J1XGCNWl
@@ -52,7 +52,7 @@ namespace AuthorizationApi.Services
             /QIDAQAB
             -----END PUBLIC KEY-----";
 
-        public string CreateAccessToken(User user)
+        public string CreateAccessToken(UserDetails userDetails)
         {
 
             var privateKeyBytes = Convert.FromBase64String(PrivateKey.Replace("-----BEGIN PRIVATE KEY-----", "").Replace("-----END PRIVATE KEY-----", ""));
@@ -70,7 +70,7 @@ namespace AuthorizationApi.Services
                 notBefore: now,
                 expires: now.AddMinutes(5),
                 signingCredentials: new SigningCredentials(key, SecurityAlgorithms.RsaSha256),
-                claims: GetClaims(user)
+                claims: GetClaims(userDetails)
             );
 
             return handler.WriteToken(jwtSecurityToken);
@@ -81,11 +81,14 @@ namespace AuthorizationApi.Services
             return Guid.NewGuid().ToString();
         }
 
-        private dynamic GetClaims(User user)
+        private dynamic GetClaims(UserDetails userDetails)
         {
-            List<Claim> claimList = new List<Claim>();
-            claimList.Add(new Claim("email", user.Username));
-            foreach (string role in user.Roles)
+            List<Claim> claimList = new List<Claim>()
+            {
+                new Claim("email", userDetails.Username)
+            };
+            
+            foreach (string role in userDetails.Roles)
             {
                 claimList.Add(new Claim("role", role));
             }
@@ -102,8 +105,7 @@ namespace AuthorizationApi.Services
             var rsa = RSA.Create();
             rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
             var key = new RsaSecurityKey(rsa);
-
-            SecurityToken validatedToken = null;
+            
             var tokenValidationParameters = new TokenValidationParameters()
             {
                 ValidateAudience = false,
@@ -113,10 +115,10 @@ namespace AuthorizationApi.Services
 
             try
             {
-                handler.ValidateToken(token, tokenValidationParameters, out validatedToken);
+                handler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
                 JwtSecurityToken validatedJwt = validatedToken as JwtSecurityToken;
             } 
-            catch(Exception ex)
+            catch(Exception)
             {
                 return false;
             }

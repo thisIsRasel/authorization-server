@@ -1,4 +1,7 @@
-﻿using AuthorizationApi.Models;
+﻿using AuthorizationApi.Constants;
+using AuthorizationApi.Entities;
+using AuthorizationApi.Exceptions;
+using AuthorizationApi.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -8,10 +11,10 @@ namespace AuthorizationApi.Services
 {
     public class IdentityService
     {
-        private readonly AuthorizationContext authorizationContext;
+        private readonly AuthorizationDbContext authorizationContext;
         private readonly TokenService tokenService;
 
-        public IdentityService(AuthorizationContext authorizationContext, TokenService tokenService)
+        public IdentityService(AuthorizationDbContext authorizationContext, TokenService tokenService)
         {
             this.authorizationContext = authorizationContext;
             this.tokenService = tokenService;
@@ -21,92 +24,95 @@ namespace AuthorizationApi.Services
         {
             if (!IsInputValidForDifferentGrantType(payload))
             {
-                throw new Exception("Invalid Request");
+                throw new InvalidRequestException();
             }
 
-            string grantType = payload.GrantType != null ? payload.GrantType.ToLower() : null;
+            string grantType = payload.GrantType?.ToLower() ?? null;
 
-            if (grantType == "authenticate_site")
+            if (grantType == ApiConstant.GrantTypeAuthenticateSite)
             { 
                 return GetTokenForAuthenticateSiteGrantType();
             }
 
-            if(grantType == "password")
+            if(grantType == ApiConstant.GrantTypePassword)
             {
                 return GetTokenForPasswordGrantType(payload);
             }
 
-            if(grantType == "refresh_token")
+            if(grantType == ApiConstant.GrantTypeRefreshToken)
             {
                 return GetTokenForRefreshTokenGrantType(payload);
             }
 
-            throw new Exception("Unauthorized");
+            throw new UnauthorizedException();
         }
 
         private JObject GetTokenForAuthenticateSiteGrantType()
         {
-            var obj = new JObject();
-            obj.Add("token_type", "Bearer");
-            obj.Add("expires_in", 5 * 60);
-
-            User user = GetDefaultAnonymousUser();
-            obj.Add("access_token", tokenService.CreateAccessToken(user));
-            obj.Add("refresh_token", CreateRefreshToken(user));
+            var obj = new JObject()
+            {
+                ["token_type"] = ApiConstant.TokenTypeBearer,
+                ["expires_in"] = 5 * 60
+            };
+            
+            UserDetails userDetails = GetDefaultAnonymousUserDetails();
+            obj.Add("access_token", tokenService.CreateAccessToken(userDetails));
+            obj.Add("refresh_token", CreateRefreshToken(userDetails));
             return obj;
         }
 
         private JObject GetTokenForPasswordGrantType(TokenPayload payload)
         {
-            var obj = new JObject();
-            obj.Add("token_type", "Bearer");
-            obj.Add("expires_in", 5 * 60);
+            var obj = new JObject()
+            {
+                ["token_type"] = ApiConstant.TokenTypeBearer,
+                ["expires_in"] = 5 * 60
+            };
 
-            User user = GetUserByUsernameAndPassword(payload.Username, payload.Password);
-            obj.Add("access_token", tokenService.CreateAccessToken(user));
-            obj.Add("refresh_token", CreateRefreshToken(user));
+            UserDetails userDetails = GetUserDetailsByUsernameAndPassword(payload.Username, payload.Password);
+            obj.Add("access_token", tokenService.CreateAccessToken(userDetails));
+            obj.Add("refresh_token", CreateRefreshToken(userDetails));
             return obj;
         }
 
         private JObject GetTokenForRefreshTokenGrantType(TokenPayload payload)
         {
-            var obj = new JObject();
-            obj.Add("token_type", "Bearer");
-            obj.Add("expires_in", 5 * 60);
+            var obj = new JObject()
+            {
+                ["token_type"] = ApiConstant.TokenTypeBearer,
+                ["expires_in"] = 5 * 60
+            };
 
             RefreshToken refreshToken = FindRefreshToken(payload.RefreshToken);
             if(refreshToken == null)
             {
-                throw new Exception("Invalid refresh token");
+                throw new InvalidRefreshTokenException();
             }
-
-            var currentTime = DateTime.Now;
-            var createdAt = refreshToken.CreatedAt.AddMinutes(10);
-
+        
             if(refreshToken.CreatedAt.AddMinutes(10) < DateTime.Now)
             {
-                throw new Exception("Refresh token expired");
+                throw new ExpiredRefreshTokenException();
             }
 
-            User user = GetUserByUsername(refreshToken.UserId);
-            if(user == null)
+            UserDetails userDetails = GetUserDetailsByUsername(refreshToken.UserId);
+            if(userDetails == null)
             {
-                user = GetDefaultAnonymousUser();
+                userDetails = GetDefaultAnonymousUserDetails();
             }
 
-            obj.Add("access_token", tokenService.CreateAccessToken(user));
+            obj.Add("access_token", tokenService.CreateAccessToken(userDetails));
 
             return obj;
         }
 
-        private string CreateRefreshToken(User user)
+        private string CreateRefreshToken(UserDetails userDetails)
         {
             string refreshToken = tokenService.CreateRefreshToken();
             authorizationContext.RefreshTokens.Add(new RefreshToken()
             {
                 Token = refreshToken,
                 CreatedAt = DateTime.Now,
-                UserId = user.Username
+                UserId = userDetails.Username
             });
             authorizationContext.SaveChanges();
 
@@ -121,17 +127,17 @@ namespace AuthorizationApi.Services
 
         private bool IsInputValidForDifferentGrantType(TokenPayload payload)
         {
-            string grantType = payload.GrantType != null ? payload.GrantType.ToLower() : null;
+            string grantType = payload.GrantType?.ToLower() ?? null;
 
-            if(grantType == "authenticate_site")
+            if(grantType == ApiConstant.GrantTypeAuthenticateSite)
             {
                 return true;
             }
-            else if(grantType == "password" && payload.Username != null && payload.Password != null)
+            else if(grantType == ApiConstant.GrantTypePassword && payload.Username != null && payload.Password != null)
             {
                 return true;
             }
-            else if(grantType == "refresh_token" && payload.RefreshToken != null)
+            else if(grantType == ApiConstant.GrantTypeRefreshToken && payload.RefreshToken != null)
             {
                 return true;
             }
@@ -145,33 +151,47 @@ namespace AuthorizationApi.Services
             return client != null ? true : false;
         }
 
-        private User GetDefaultAnonymousUser()
+        private UserDetails GetDefaultAnonymousUserDetails()
         {
-            return new User()
+            return new UserDetails()
             {
                 Username = "default@gmail.com",
                 Roles = new string[] { "anonymous" }
             };
         }
 
-        private User GetUserByUsernameAndPassword(string userName, string password)
+        private UserDetails GetUserDetailsByUsernameAndPassword(string userName, string password)
         {
+            UserDetails userDetails = null;
             var user = authorizationContext.Users.Where<User>(u => u.Username == userName && u.Password == password).FirstOrDefault();
             if(user != null)
             {
-                user.Roles = GetRolesByUserId(user.Id);
+                userDetails = new UserDetails
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Password = user.Password,
+                    Roles = GetRolesByUserId(user.Id)
+                };
             }
-            return user;
+            return userDetails;
         }
 
-        private User GetUserByUsername(string userName)
+        private UserDetails GetUserDetailsByUsername(string userName)
         {
+            UserDetails userDetails = null;
             var user = authorizationContext.Users.Where<User>(u => u.Username == userName).FirstOrDefault();
             if (user != null)
             {
-                user.Roles = GetRolesByUserId(user.Id);
+                userDetails = new UserDetails
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Password = user.Password,
+                    Roles = GetRolesByUserId(user.Id)
+                };
             }
-            return user;
+            return userDetails;
         }
 
         private string[] GetRolesByUserId(long userId)

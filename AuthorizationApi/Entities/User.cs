@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AuthorizationApi.Models
+namespace AuthorizationApi.Entities
 {
     [Table("users")]
     public class User
@@ -12,8 +12,5 @@ namespace AuthorizationApi.Models
         public string Username { get; set; }
         
         public string Password { get; set; }
-
-        [NotMapped]
-        public string[] Roles { get; set; }
     }
 }

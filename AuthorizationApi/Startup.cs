@@ -1,4 +1,4 @@
-using AuthorizationApi.Models;
+using AuthorizationApi.Middlewares;
 using AuthorizationApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -21,7 +21,7 @@ namespace AuthorizationApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContextPool<AuthorizationContext>(options => options.UseMySql("Server=localhost;Database=dotnet;User=root;Password=;"));
+            services.AddDbContextPool<AuthorizationDbContext>(options => options.UseMySql("Server=localhost;Database=dotnet;User=root;Password=;"));
             services.AddTransient<IdentityService>();
             services.AddTransient<TokenService>();
             services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
@@ -36,6 +36,8 @@ namespace AuthorizationApi
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseRouting();
 

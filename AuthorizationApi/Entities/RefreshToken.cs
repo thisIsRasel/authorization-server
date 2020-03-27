@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AuthorizationApi.Models
+namespace AuthorizationApi.Entities
 {
     [Table("refresh_tokens")]
     public class RefreshToken

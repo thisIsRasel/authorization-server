@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AuthorizationApi.Models;
+using AuthorizationApi.Entities;
 
 namespace AuthorizationApi.Controllers
 {
@@ -13,9 +13,9 @@ namespace AuthorizationApi.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly AuthorizationContext _context;
+        private readonly AuthorizationDbContext _context;
 
-        public UsersController(AuthorizationContext context)
+        public UsersController(AuthorizationDbContext context)
         {
             _context = context;
         }
