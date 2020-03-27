@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace AuthorizationApi.Models
+namespace Application.Models
 {
     public class TokenPayload
     {

@@ -1,0 +1,11 @@
+F:\DotNetCore\AuthorizationApi\Application\bin\Debug\netcoreapp3.1\Application.deps.json
+F:\DotNetCore\AuthorizationApi\Application\bin\Debug\netcoreapp3.1\Application.dll
+F:\DotNetCore\AuthorizationApi\Application\bin\Debug\netcoreapp3.1\Domain.dll
+F:\DotNetCore\AuthorizationApi\Application\bin\Debug\netcoreapp3.1\Domain.pdb
+F:\DotNetCore\AuthorizationApi\Application\obj\Debug\netcoreapp3.1\Application.csprojAssemblyReference.cache
+F:\DotNetCore\AuthorizationApi\Application\obj\Debug\netcoreapp3.1\Application.AssemblyInfoInputs.cache
+F:\DotNetCore\AuthorizationApi\Application\obj\Debug\netcoreapp3.1\Application.AssemblyInfo.cs
+F:\DotNetCore\AuthorizationApi\Application\obj\Debug\netcoreapp3.1\Application.csproj.CopyComplete
+F:\DotNetCore\AuthorizationApi\Application\bin\Debug\netcoreapp3.1\Application.pdb
+F:\DotNetCore\AuthorizationApi\Application\obj\Debug\netcoreapp3.1\Application.dll
+F:\DotNetCore\AuthorizationApi\Application\obj\Debug\netcoreapp3.1\Application.pdb

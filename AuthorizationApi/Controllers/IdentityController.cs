@@ -1,4 +1,4 @@
-﻿using AuthorizationApi.Models;
+﻿using Application.Models;
 using AuthorizationApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;

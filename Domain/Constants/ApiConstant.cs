@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthorizationApi.Constants
+namespace Domain.Constants
 {
     public static class ApiConstant
     {

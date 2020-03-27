@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthorizationApi.Models
+namespace Application.Models
 {
     public class ErrorDetails
     {

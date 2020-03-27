@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using AuthorizationApi.Models;
+using Application.Interfaces;
+using Application.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthorizationApi.Services
 {
 
     
-    public class TokenService
+    public class TokenService: ITokenService
     {
 
         private readonly string PrivateKey = @"-----BEGIN PRIVATE KEY-----

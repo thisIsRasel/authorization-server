@@ -1,15 +1,16 @@
-﻿using AuthorizationApi.Constants;
+﻿using Domain.Constants;
 using Domain.Exceptions;
-using AuthorizationApi.Models;
+using Application.Models;
 using Domain.Entities;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Application.Interfaces;
 
 namespace AuthorizationApi.Services
 {
-    public class IdentityService
+    public class IdentityService: IIdentityService
     {
         private readonly AuthorizationDbContext authorizationContext;
         private readonly TokenService tokenService;

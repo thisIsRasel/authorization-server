@@ -1,5 +1,5 @@
 ﻿
-namespace AuthorizationApi.Models
+namespace Application.Models
 {
     public class UserDetails
     {

@@ -1,5 +1,5 @@
-﻿using Domain.Exceptions;
-using AuthorizationApi.Models;
+﻿using Application.Models;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;

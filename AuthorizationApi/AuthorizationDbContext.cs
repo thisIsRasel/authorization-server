@@ -1,10 +1,10 @@
-﻿
+﻿using Application.Interfaces;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthorizationApi
 {
-    public class AuthorizationDbContext: DbContext
+    public class AuthorizationDbContext: DbContext, IAuthorizationDbContext
     {
         public AuthorizationDbContext(DbContextOptions<AuthorizationDbContext> options): base(options)
         {
