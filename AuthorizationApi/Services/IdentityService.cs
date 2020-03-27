@@ -1,7 +1,7 @@
 ﻿using AuthorizationApi.Constants;
-using AuthorizationApi.Entities;
-using AuthorizationApi.Exceptions;
+using Domain.Exceptions;
 using AuthorizationApi.Models;
+using Domain.Entities;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;

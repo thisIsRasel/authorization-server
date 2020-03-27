@@ -1,4 +1,4 @@
-﻿using AuthorizationApi.Exceptions;
+﻿using Domain.Exceptions;
 using AuthorizationApi.Models;
 using Microsoft.AspNetCore.Http;
 using System;

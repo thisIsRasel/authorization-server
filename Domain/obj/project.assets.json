@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\DotNetCore\\AuthorizationApi\\Models\\Models.csproj",
-      "projectName": "Models",
-      "projectPath": "F:\\DotNetCore\\AuthorizationApi\\Models\\Models.csproj",
+      "projectUniqueName": "F:\\DotNetCore\\AuthorizationApi\\Domain\\Domain.csproj",
+      "projectName": "Domain",
+      "projectPath": "F:\\DotNetCore\\AuthorizationApi\\Domain\\Domain.csproj",
       "packagesPath": "C:\\Users\\Rasel\\.nuget\\packages\\",
-      "outputPath": "F:\\DotNetCore\\AuthorizationApi\\Models\\obj\\",
+      "outputPath": "F:\\DotNetCore\\AuthorizationApi\\Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

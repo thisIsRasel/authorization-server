@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AuthorizationApi.Entities
+namespace Domain.Entities
 {
     [Table("user_role_maps")]
     public class UserRoleMap
