@@ -24,10 +24,20 @@ namespace AuthorizationApi.Middlewares
             {
                 await next.Invoke(httpContext);
             }
+            catch(InvalidRequestException)
+            {
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            }
+            catch(UnauthorizedException)
+            {
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
             catch(ExpiredRefreshTokenException)
             {
                 httpContext.Response.ContentType = "application/json";
-                httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
                 await httpContext.Response.WriteAsync(new ErrorDetails
                 {
