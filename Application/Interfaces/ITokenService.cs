@@ -12,6 +12,6 @@ namespace Application.Interfaces
 
         string CreateRefreshToken();
 
-        public bool VerifyAccessToken(string token);
+        bool VerifyAccessToken(string token);
     }
 }
