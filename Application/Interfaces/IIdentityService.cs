@@ -9,5 +9,7 @@ namespace Application.Interfaces
     public interface IIdentityService
     {
         dynamic GenerateToken(TokenPayload payload);
+
+        bool IsValidAccessToken(string authorizationHeader);
     }
 }

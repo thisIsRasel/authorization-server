@@ -46,6 +46,17 @@ namespace AuthorizationApi.Middlewares
                     Message = ex.Message
                 }.ToString());
             }
+            catch(InvalidRefreshTokenException ex)
+            {
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                await httpContext.Response.WriteAsync(new ErrorDetails
+                {
+                    Error = "invalid_refresh_token",
+                    Message = ex.Message
+                }.ToString());
+            }
             catch(ExpiredRefreshTokenException ex)
             {
                 httpContext.Response.ContentType = "application/json";

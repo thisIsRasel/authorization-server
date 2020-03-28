@@ -52,6 +52,25 @@ namespace AuthorizationApi.Services
             throw new UnauthorizedException();
         }
 
+        public bool IsValidAccessToken(string authorizationHeader)
+        {
+            authorizationHeader = authorizationHeader?.Trim();
+            
+            if(authorizationHeader != null)
+            {
+                string bearer = authorizationHeader.Substring(0, ApiConstant.TokenTypeBearer.Length);
+                if(bearer.ToLower() != ApiConstant.TokenTypeBearer.ToLower())
+                {
+                    return false;
+                }
+
+                string token = authorizationHeader.Remove(0, ApiConstant.TokenTypeBearer.Length + 1);
+                return tokenService.VerifyAccessToken(token);
+            }
+
+            return false;
+        }
+
         private JObject GetTokenForAuthenticateSiteGrantType()
         {
             var obj = new JObject()
@@ -91,12 +110,12 @@ namespace AuthorizationApi.Services
             RefreshToken refreshToken = FindRefreshToken(payload.RefreshToken);
             if(refreshToken == null)
             {
-                throw new InvalidRefreshTokenException();
+                throw new InvalidRefreshTokenException("The specified refresh token is invalid!");
             }
         
             if(refreshToken.CreatedAt.AddMinutes(Convert.ToInt32(Configuration["RefreshTokenLifeTime"], CultureInfo.CurrentCulture)) < DateTime.Now)
             {
-                throw new ExpiredRefreshTokenException();
+                throw new ExpiredRefreshTokenException("The specified refresh token is expired!");
             }
 
             UserDetails userDetails = GetUserDetailsByUsername(refreshToken.UserId);

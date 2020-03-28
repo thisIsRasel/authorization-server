@@ -10,12 +10,10 @@ namespace AuthorizationApi.Controllers
     public class IdentityController : ControllerBase
     {
 
-        private readonly TokenService tokenService;
         private readonly IdentityService identityService;
 
-        public IdentityController(TokenService tokenService, IdentityService identityService)
+        public IdentityController(IdentityService identityService)
         {
-            this.tokenService = tokenService;
             this.identityService = identityService;
         }
 
@@ -29,7 +27,8 @@ namespace AuthorizationApi.Controllers
         [HttpPost]
         public bool VerifyToken()
         {
-            return tokenService.VerifyAccessToken();
+            Request.Headers.TryGetValue("Authorization", out var authorizationHeaders);
+            return identityService.IsValidAccessToken(authorizationHeaders);
         }
     }
 }

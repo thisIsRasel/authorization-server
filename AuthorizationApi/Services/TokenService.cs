@@ -97,9 +97,8 @@ namespace AuthorizationApi.Services
             return claimList;
         }
 
-        public bool VerifyAccessToken()
+        public bool VerifyAccessToken(string token)
         {
-            string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJhc2VsQGdtYWlsLmNvbSIsInJvbGUiOlsiYWRtaW4iLCJjdXN0b21lciJdLCJuYmYiOjE1ODM1NjI2OTMsImV4cCI6MTU4MzU2Mjk5MywiaXNzIjoibWUiLCJhdWQiOiJ5b3UifQ.d_gEpWGAWrzc75tO-AxLL8rKLQa_s7oyxuMLHIGyNbcIxZBAzLTj8Fe5pHxPDakVFyaKLIDzC1f5cvPTovweb1XjcHksh0SxROFBTUXLRVOI2kHPIE837OLVP2xDBWU5UP1dyMU8iOc4G1rsrrgf2ZcwUCry3eJjaHd-celMK9pEmqiIG8riaWn-7yUliWmfqac6vjY4Cpj6U606ESMzWtCTtCZ4Zczo_zGMgIvvMiynk_Hzjwkx1RSrYvvJ3N0YLcl6YTNIFDN33deKzy-7jR-GmGubYP1b85QeZ3RMh2-O7_uu1eRUywot0CRPaYyh5PIvQ_XSfUbJKtMx_JMbDA";
             var handler = new JwtSecurityTokenHandler();
 
             var publicKeyBytes = Convert.FromBase64String(PublicKey.Replace("-----BEGIN PUBLIC KEY-----", "").Replace("-----END PUBLIC KEY-----", ""));
