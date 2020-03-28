@@ -39,6 +39,8 @@ namespace AuthorizationApi
 
             app.UseMiddleware<ExceptionMiddleware>();
 
+            app.UseStaticFiles();
+
             app.UseRouting();
 
             app.UseAuthorization();
