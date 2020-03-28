@@ -7,16 +7,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Application.Interfaces;
+using Microsoft.Extensions.Configuration;
+using System.Globalization;
 
 namespace AuthorizationApi.Services
 {
     public class IdentityService: IIdentityService
     {
+        private readonly IConfiguration Configuration;
         private readonly AuthorizationDbContext authorizationContext;
         private readonly TokenService tokenService;
 
-        public IdentityService(AuthorizationDbContext authorizationContext, TokenService tokenService)
+        public IdentityService(IConfiguration configuration, AuthorizationDbContext authorizationContext, TokenService tokenService)
         {
+            Configuration = configuration;
             this.authorizationContext = authorizationContext;
             this.tokenService = tokenService;
         }
@@ -28,7 +32,7 @@ namespace AuthorizationApi.Services
                 throw new InvalidRequestException();
             }
 
-            string grantType = payload.GrantType?.ToLower() ?? null;
+            string grantType = payload.GrantType?.ToLower(CultureInfo.CurrentCulture) ?? null;
 
             if (grantType == ApiConstant.GrantTypeAuthenticateSite)
             { 
@@ -53,7 +57,7 @@ namespace AuthorizationApi.Services
             var obj = new JObject()
             {
                 ["token_type"] = ApiConstant.TokenTypeBearer,
-                ["expires_in"] = 5 * 60
+                ["expires_in"] = GetAccessTokenLifeTimeInSeconds()
             };
             
             UserDetails userDetails = GetDefaultAnonymousUserDetails();
@@ -67,7 +71,7 @@ namespace AuthorizationApi.Services
             var obj = new JObject()
             {
                 ["token_type"] = ApiConstant.TokenTypeBearer,
-                ["expires_in"] = 5 * 60
+                ["expires_in"] = GetAccessTokenLifeTimeInSeconds()
             };
 
             UserDetails userDetails = GetUserDetailsByUsernameAndPassword(payload.Username, payload.Password);
@@ -81,7 +85,7 @@ namespace AuthorizationApi.Services
             var obj = new JObject()
             {
                 ["token_type"] = ApiConstant.TokenTypeBearer,
-                ["expires_in"] = 5 * 60
+                ["expires_in"] = GetAccessTokenLifeTimeInSeconds()
             };
 
             RefreshToken refreshToken = FindRefreshToken(payload.RefreshToken);
@@ -90,7 +94,7 @@ namespace AuthorizationApi.Services
                 throw new InvalidRefreshTokenException();
             }
         
-            if(refreshToken.CreatedAt.AddMinutes(10) < DateTime.Now)
+            if(refreshToken.CreatedAt.AddMinutes(Convert.ToInt32(Configuration["RefreshTokenLifeTime"], CultureInfo.CurrentCulture)) < DateTime.Now)
             {
                 throw new ExpiredRefreshTokenException();
             }
@@ -104,6 +108,11 @@ namespace AuthorizationApi.Services
             obj.Add("access_token", tokenService.CreateAccessToken(userDetails));
 
             return obj;
+        }
+
+        private int GetAccessTokenLifeTimeInSeconds()
+        {
+            return Convert.ToInt32(Configuration["AccessTokenLifeTime"], CultureInfo.CurrentCulture) * 60;
         }
 
         private string CreateRefreshToken(UserDetails userDetails)
@@ -128,7 +137,7 @@ namespace AuthorizationApi.Services
 
         private bool IsInputValidForDifferentGrantType(TokenPayload payload)
         {
-            string grantType = payload.GrantType?.ToLower() ?? null;
+            string grantType = payload.GrantType?.ToLower(CultureInfo.CurrentCulture) ?? null;
 
             if(grantType == ApiConstant.GrantTypeAuthenticateSite)
             {

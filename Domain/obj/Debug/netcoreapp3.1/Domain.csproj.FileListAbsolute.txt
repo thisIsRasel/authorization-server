@@ -5,3 +5,4 @@ F:\DotNetCore\AuthorizationApi\Domain\obj\Debug\netcoreapp3.1\Domain.AssemblyInf
 F:\DotNetCore\AuthorizationApi\Domain\obj\Debug\netcoreapp3.1\Domain.AssemblyInfo.cs
 F:\DotNetCore\AuthorizationApi\Domain\obj\Debug\netcoreapp3.1\Domain.dll
 F:\DotNetCore\AuthorizationApi\Domain\obj\Debug\netcoreapp3.1\Domain.pdb
+F:\DotNetCore\AuthorizationApi\Domain\obj\Debug\netcoreapp3.1\Domain.csprojAssemblyReference.cache

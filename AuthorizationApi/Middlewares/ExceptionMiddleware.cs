@@ -24,36 +24,48 @@ namespace AuthorizationApi.Middlewares
             {
                 await next.Invoke(httpContext);
             }
-            catch(InvalidRequestException)
-            {
-                httpContext.Response.ContentType = "application/json";
-                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-            }
-            catch(UnauthorizedException)
-            {
-                httpContext.Response.ContentType = "application/json";
-                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            }
-            catch(ExpiredRefreshTokenException)
+            catch(InvalidRequestException ex)
             {
                 httpContext.Response.ContentType = "application/json";
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
                 await httpContext.Response.WriteAsync(new ErrorDetails
                 {
-                    StatusCode = httpContext.Response.StatusCode,
-                    Message = "Refresh token expired"
+                    Error = "invalid_request",
+                    Message = ex.Message
                 }.ToString());
             }
-            catch(Exception)
+            catch(UnauthorizedException ex)
+            {
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                await httpContext.Response.WriteAsync(new ErrorDetails
+                {
+                    Error = "unauthorized",
+                    Message = ex.Message
+                }.ToString());
+            }
+            catch(ExpiredRefreshTokenException ex)
+            {
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                await httpContext.Response.WriteAsync(new ErrorDetails
+                {
+                    Error = "expired_refresh_token",
+                    Message = ex.Message
+                }.ToString());
+            }
+            catch(Exception ex)
             {
                 httpContext.Response.ContentType = "application/json";
                 httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
                 await httpContext.Response.WriteAsync(new ErrorDetails
                 {
-                    StatusCode = httpContext.Response.StatusCode,
-                    Message = "Unknown"
+                    Error = "internal_server_error",
+                    Message = ex.Message
                 }.ToString());
             }
         }

@@ -21,7 +21,7 @@ namespace AuthorizationApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContextPool<AuthorizationDbContext>(options => options.UseMySql("Server=localhost;Database=dotnet;User=root;Password=;"));
+            services.AddDbContextPool<AuthorizationDbContext>(options => options.UseMySql(Configuration["ConnectionStrings:DefaultConnection"]));
             services.AddTransient<IdentityService>();
             services.AddTransient<TokenService>();
             services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
